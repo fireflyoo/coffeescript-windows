@@ -74,6 +74,7 @@ function readUtf8(filename) {
 	stream.Open();
 	stream.Type = 2; // Text
 //	stream.Charset = 'utf-8';
+	stream.Charset = 'GBK';
 	stream.LoadFromFile(filename);
 	var text = stream.ReadText();
 	stream.Close();
@@ -85,6 +86,7 @@ function writeUtf8(filename, text) {
 	stream.Open();
 	stream.Type = 2; // Text
 //	stream.Charset = 'utf-8';
+	stream.Charset = 'GBK';
 	stream.WriteText(text);
 	stream.SaveToFile(filename, 2);
 	stream.Close();
