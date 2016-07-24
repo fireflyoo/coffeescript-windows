@@ -1,15 +1,21 @@
 <job>
 <!-- https://github.com/jashkenas/coffee-script/raw/master/extras/coffee-script.js -->
 <script src="coffee-script.js" language="JScript" />
+<script src="REPL.js" language="JScript" />
 <script language="JScript">
 (function() {
-
+if(!WScript.Arguments.Length){
+		REPL.start();
+}
+else
+{
     var args = [];
     for (var i = 0; i < WScript.Arguments.Length; i++) {
         args.push(WScript.Arguments.Item(i));
     }
 
     // FileSystemObject: http://msdn.microsoft.com/en-us/library/bkx696eh.aspx
+
     var fso = new ActiveXObject("Scripting.FileSystemObject");
 
     var isfolder = (args[0] && fso.folderExists(args[0]));
@@ -26,7 +32,7 @@
     else {
         convert(args[0], args[1])
     }
-
+}
 })();
 
 
@@ -42,6 +48,7 @@ function convert(input, output) {
     }
 
     var coffee;
+/*
     if (!input) { 
         // Read all input data from STDIN
         var chunks = [];
@@ -52,7 +59,8 @@ function convert(input, output) {
     else {
         coffee = readUtf8(input);
     }
-
+*/
+        readUtf8(input);
     try {
         var js = CoffeeScript.compile(coffee);
         
