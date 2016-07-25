@@ -9,6 +9,9 @@
 # shared identity function
 id = (_) -> if arguments.length is 1 then _ else [arguments...]
 
+# helper to assert that a string should fail compilation
+cantCompile = (code) ->
+  throws -> CoffeeScript.compile code
 
 test "basic argument passing", ->
 
@@ -649,3 +652,57 @@ test "Loose tokens inside of explicit call lists", ->
   bar = first( first
                one: 1)
   eq bar.one, 1
+
+test "Non-callable literals shouldn't compile", ->
+  cantCompile '1(2)'
+  cantCompile '1 2'
+  cantCompile '/t/(2)'
+  cantCompile '/t/ 2'
+  cantCompile '///t///(2)'
+  cantCompile '///t/// 2'
+  cantCompile "''(2)"
+  cantCompile "'' 2"
+  cantCompile '""(2)'
+  cantCompile '"" 2'
+  cantCompile '""""""(2)'
+  cantCompile '"""""" 2'
+  cantCompile '{}(2)'
+  cantCompile '{} 2'
+  cantCompile '[](2)'
+  cantCompile '[] 2'
+  cantCompile '[2..9] 2'
+  cantCompile '[2..9](2)'
+  cantCompile '[1..10][2..9] 2'
+  cantCompile '[1..10][2..9](2)'
+
+test 'implicit invocation with implicit object literal', ->
+  f = (obj) -> eq 1, obj.a
+
+  f
+    a: 1
+  obj =
+    if f
+      a: 2
+    else
+      a: 1
+  eq 2, obj.a
+
+  f
+    "a": 1
+  obj =
+    if f
+      "a": 2
+    else
+      "a": 1
+  eq 2, obj.a
+
+  # #3935: Implicit call when the first key of an implicit object has interpolation.
+  a = 'a'
+  f
+    "#{a}": 1
+  obj =
+    if f
+      "#{a}": 2
+    else
+      "#{a}": 1
+  eq 2, obj.a

@@ -337,6 +337,18 @@ test "#2502: parenthesizing inner object values", ->
   eq (new A).sections.default, 0
 
 
+test "conditional prototype property assignment", ->
+  debug = false
+
+  class Person
+    if debug
+      age: -> 10
+    else
+      age: -> 20
+
+  eq (new Person).age(), 20
+
+
 test "mild metaprogramming", ->
 
   class Base
@@ -687,6 +699,15 @@ test "#2052: classes should work in strict mode", ->
   catch e
     ok no
 
+test "directives in class with extends ", ->
+  strictTest = """
+    class extends Object
+      ### comment ###
+      'use strict'
+      do -> eq this, undefined
+  """
+  CoffeeScript.run strictTest, bare: yes
+
 test "#2630: class bodies can't reference arguments", ->
   throws ->
     CoffeeScript.compile('class Test then arguments')
@@ -779,3 +800,97 @@ test "#2796: ditto, ditto, ditto", ->
 
   new Base
   eq answer, 'right!'
+
+test "#3063: Class bodies cannot contain pure statements", ->
+  throws -> CoffeeScript.compile """
+    class extends S
+      return if S.f
+      @f: => this
+  """
+
+test "#2949: super in static method with reserved name", ->
+  class Foo
+    @static: -> 'baz'
+
+  class Bar extends Foo
+    @static: -> super
+
+  eq Bar.static(), 'baz'
+
+test "#3232: super in static methods (not object-assigned)", ->
+  class Foo
+    @baz = -> true
+    @qux = -> true
+
+  class Bar extends Foo
+    @baz = -> super
+    Bar.qux = -> super
+
+  ok Bar.baz()
+  ok Bar.qux()
+
+test "#1392 calling `super` in methods defined on namespaced classes", ->
+  class Base
+    m: -> 5
+    n: -> 4
+  namespace =
+    A: ->
+    B: ->
+  namespace.A extends Base
+
+  namespace.A::m = -> super
+  eq 5, (new namespace.A).m()
+  namespace.B::m = namespace.A::m
+  namespace.A::m = null
+  eq 5, (new namespace.B).m()
+
+  count = 0
+  getNamespace = -> count++; namespace
+  getNamespace().A::n = -> super
+  eq 4, (new namespace.A).n()
+  eq 1, count
+
+  class C
+    @a: ->
+    @a extends Base
+    @a::m = -> super
+  eq 5, (new C.a).m()
+
+test "dynamic method names and super", ->
+  class Base
+    @m: -> 6
+    m: -> 5
+    m2: -> 4.5
+    n: -> 4
+  A = ->
+  A extends Base
+
+  m = 'm'
+  A::[m] = -> super
+  m = 'n'
+  eq 5, (new A).m()
+
+  name = -> count++; 'n'
+
+  count = 0
+  A::[name()] = -> super
+  eq 4, (new A).n()
+  eq 1, count
+
+  m = 'm'
+  m2 = 'm2'
+  count = 0
+  class B extends Base
+    @[name()] = -> super
+    @::[m] = -> super
+    "#{m2}": -> super
+  b = new B
+  m = m2 = 'n'
+  eq 6, B.m()
+  eq 5, b.m()
+  eq 4.5, b.m2()
+  eq 1, count
+
+  class C extends B
+    m: -> super
+  eq 5, (new C).m()

@@ -387,6 +387,23 @@ test "#1871: Special case for IMPLICIT_END in the middle of an implicit object",
 
   eq result.two.join(' '), '2 2 2'
 
+test "#1871: implicit object closed by IMPLICIT_END in implicit returns", ->
+  ob = do ->
+    a: 1 if no
+  eq ob, undefined
+
+  # instead these return an object
+  func = ->
+    key:
+      i for i in [1, 2, 3]
+
+  eq func().key.join(' '), '1 2 3'
+
+  func = ->
+    key: (i for i in [1, 2, 3])
+
+  eq func().key.join(' '), '1 2 3'
+
 test "#1961, #1974, regression with compound assigning to an implicit object", ->
 
   obj = null
@@ -410,3 +427,145 @@ test "#2207: Immediate implicit closes don't close implicit objects", ->
     key: for i in [1, 2, 3] then i
 
   eq func().key.join(' '), '1 2 3'
+
+test "#3216: For loop declaration as a value of an implicit object", ->
+  test = [0..2]
+  ob =
+    a: for v, i in test then i
+    b: for v, i in test then i
+    c: for v in test by 1 then v
+    d: for v in test when true then v
+  arrayEq ob.a, test
+  arrayEq ob.b, test
+  arrayEq ob.c, test
+  arrayEq ob.d, test
+
+test 'inline implicit object literals within multiline implicit object literals', ->
+  x =
+    a: aa: 0
+    b: 0
+  eq 0, x.b
+  eq 0, x.a.aa
+
+test "object keys with interpolations", ->
+  # Simple cases.
+  a = 'a'
+  obj = "#{a}": yes
+  eq obj.a, yes
+  obj = {"#{a}": yes}
+  eq obj.a, yes
+  obj = {"#{a}"}
+  eq obj.a, 'a'
+  obj = {"#{5}"}
+  eq obj[5], '5' # Note that the value is a string, just like the key.
+
+  # Commas in implicit object.
+  obj = "#{'a'}": 1, b: 2
+  deepEqual obj, {a: 1, b: 2}
+  obj = a: 1, "#{'b'}": 2
+  deepEqual obj, {a: 1, b: 2}
+  obj = "#{'a'}": 1, "#{'b'}": 2
+  deepEqual obj, {a: 1, b: 2}
+
+  # Commas in explicit object.
+  obj = {"#{'a'}": 1, b: 2}
+  deepEqual obj, {a: 1, b: 2}
+  obj = {a: 1, "#{'b'}": 2}
+  deepEqual obj, {a: 1, b: 2}
+  obj = {"#{'a'}": 1, "#{'b'}": 2}
+  deepEqual obj, {a: 1, b: 2}
+
+  # Commas after key with interpolation.
+  obj = {"#{'a'}": yes,}
+  eq obj.a, yes
+  obj = {
+    "#{'a'}": 1,
+    "#{'b'}": 2,
+    ### herecomment ###
+    "#{'c'}": 3,
+  }
+  deepEqual obj, {a: 1, b: 2, c: 3}
+  obj =
+    "#{'a'}": 1,
+    "#{'b'}": 2,
+    ### herecomment ###
+    "#{'c'}": 3,
+  deepEqual obj, {a: 1, b: 2, c: 3}
+  obj =
+    "#{'a'}": 1,
+    "#{'b'}": 2,
+    ### herecomment ###
+    "#{'c'}": 3, "#{'d'}": 4,
+  deepEqual obj, {a: 1, b: 2, c: 3, d: 4}
+
+  # Key with interpolation mixed with `@prop`.
+  deepEqual (-> {@a, "#{'b'}": 2}).call(a: 1), {a: 1, b: 2}
+
+  # Evaluate only once.
+  count = 0
+  b = -> count++; 'b'
+  obj = {"#{b()}"}
+  eq obj.b, 'b'
+  eq count, 1
+
+  # Evaluation order.
+  arr = []
+  obj =
+    a: arr.push 1
+    b: arr.push 2
+    "#{'c'}": arr.push 3
+    "#{'d'}": arr.push 4
+    e: arr.push 5
+    "#{'f'}": arr.push 6
+    g: arr.push 7
+  arrayEq arr, [1..7]
+  deepEqual obj, {a: 1, b: 2, c: 3, d: 4, e: 5, f: 6, g: 7}
+
+  # Object starting with dynamic key.
+  obj =
+    "#{'a'}": 1
+    b: 2
+  deepEqual obj, {a: 1, b: 2}
+
+  # Comments in implicit object.
+  obj =
+    ### leading comment ###
+    "#{'a'}": 1
+
+    ### middle ###
+
+    "#{'b'}": 2
+    # regular comment
+    'c': 3
+    ### foo ###
+    d: 4
+    "#{'e'}": 5
+  deepEqual obj, {a: 1, b: 2, c: 3, d: 4, e: 5}
+
+  # Comments in explicit object.
+  obj = {
+    ### leading comment ###
+    "#{'a'}": 1
+
+    ### middle ###
+
+    "#{'b'}": 2
+    # regular comment
+    'c': 3
+    ### foo ###
+    d: 4
+    "#{'e'}": 5
+  }
+  deepEqual obj, {a: 1, b: 2, c: 3, d: 4, e: 5}
+
+  # A more complicated case.
+  obj = {
+    "#{'interpolated'}":
+      """
+        #{ '''nested''' }
+      """: 123: 456
+  }
+  deepEqual obj,
+    interpolated:
+      nested:
+        123: 456
