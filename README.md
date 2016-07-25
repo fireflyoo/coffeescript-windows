@@ -12,9 +12,9 @@ To get in REPL mode just run the 'coffee.com' without any arguments, like so:
     
     coffee
     
-~~If an output is not specified, it is written to `stdout`. In neither an input or output are specified then data is assumed to be on `stdin`. For example:~~
+If an output is not specified, it is written to `stdout`. ~~In neither an input or output are specified then data is assumed to be on `stdin`.~~ For example:
 
-~~type input.coffee | coffee > output.~~
+type input.coffee | coffee > output.
 
 Errors are written to `stderr`.
 
