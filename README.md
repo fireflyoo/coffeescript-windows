@@ -6,7 +6,11 @@ A simple command-line utilty for Windows that will compile `*.coffee` files to J
 
 To use it, invoke `coffee.cmd` like so:
 
-    coffee input.coffee output.jsTo get in REPL mode
+    coffee input.coffee output.js
+    
+To get in REPL mode just run the 'coffee.com' without any arguments, like so:
+    
+    coffee
     
 ~~If an output is not specified, it is written to `stdout`. In neither an input or output are specified then data is assumed to be on `stdin`. For example:~~
 
