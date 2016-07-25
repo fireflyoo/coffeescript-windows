@@ -60,7 +60,7 @@ function convert(input, output) {
         coffee = readUtf8(input);
     }
 */
-        readUtf8(input);
+        coffee = readUtf8(input);
     try {
         var js = CoffeeScript.compile(coffee);
         
