@@ -1,8 +1,6 @@
 var REPL = {
 	    version: "0.3",
 		executing: true,
-		prompt: "Coffee> ",
-	    multiLine: false,
 		maximumInspectionDepth: 100,
 	    changeLog: {
 			"0.3":["added help message"],
@@ -29,10 +27,6 @@ var REPL = {
 			return REPL.prompt;
 		},
 	
-		useMultiLineMode: function() {
-			REPL.multiLine = "undefined;"; // should return empty, and also set it to false.
-		},
-	
 		include: function(jsFile) {
 			var fso = new ActiveXObject("Scripting.FileSystemObject");
 			var f = fso.OpenTextFile(jsFile);
@@ -43,28 +37,27 @@ var REPL = {
 	
 	
 		exec: function() {
+      	var isMultiLineMode=false;
+        var cmd="";
+        var singleLine="";
+        var multiLine="";
+        var prompt = "Coffee> ";
+        var blankPrompt = "      >";
 			while(REPL.executing) {
-				WScript.StdOut.Write(REPL.getPrompt());
-	
-				var cmd = WScript.StdIn.ReadLine();
-	
-				if (REPL.multiLine)
-				{
-					if (cmd == "!GO") {
-						cmd = REPL.multiLine;
-						REPL.multiLine = false;
-					} else {
-						REPL.multiLine = REPL.multiLine + cmd;
-					}
+				WScript.StdOut.Write(isMultiLineMode?blankPrompt:prompt);
+
+				singleLine = WScript.StdIn.ReadLine();
+ 
+	      isMultiLineMode=!singleLine?!isMultiLineMode:isMultiLineMode;
+        
+        
+				if (isMultiLineMode) {
+						multiLine += singleLine + "\n";
 				}
 	
-				/* k, this is a bit of a cheep hack, but if the last
-				 * entered command in multi-line mode is \GO
-				 * then it will switch off multi-line mode and
-				 * store the result in command.
-				 */
-	
-				if (!REPL.multiLine) {
+      else {
+            cmd= multiLine || singleLine;
+            multiLine="";
 					try {
 						WScript.StdOut.WriteLine(eval(CoffeeScript.compile(cmd,{"bare":true})));
 					} catch(e) {
