@@ -11,7 +11,7 @@ To use it, invoke `coffee.cmd` like so:
 To get in REPL mode just run the 'coffee.com' without any arguments, like so:
     
     coffee
-    
+in the REPL,you can get-in/out MultiLineMode with Empty new Line.     
 If an output is not specified, it is written to `stdout`. ~~In neither an input or output are specified then data is assumed to be on `stdin`. For example:~~
 
 ~~type input.coffee | coffee > output.~~
