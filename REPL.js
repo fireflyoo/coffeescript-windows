@@ -1,4 +1,5 @@
 var REPL = {
+	       inputText:null,
 	       version: "0.3",
 	       changeLog: {
 			"0.3":["added help message"],
@@ -8,7 +9,7 @@ var REPL = {
 		},
 	
 		start: function() {
-			REPL.showMOTD();
+			if(!REPL.inputText)REPL.showMOTD();
 			REPL.exec();
 		},
 	
@@ -28,29 +29,29 @@ var REPL = {
                        var _$; 
 					   var __$;
                        var say = function (args) {WScript.StdOut.WriteLine(args);};
-                       while(true) {
-                            WScript.StdOut.Write(_isMultiLinesMode?"      >":"Coffee>");
-                            _$=__$;
+					   if(REPL.inputText)_multiLines=REPL.inputText;
+                       while(true) {        
+                            if (_isMultiLinesMode) {
+        	                   _multiLines += _singleLine + "\n";
+                            }
+	
+                            else {
+                               _singleLine = _multiLines || _singleLine;
+                               _multiLines="";
+                                try {
+                                  __$=CoffeeScript.compile(_singleLine,{"bare":true});
+                                  _=eval(__$);
+                                  if(typeof(_) !== "function")say(_);
+                                }      catch(e) {
+                                          REPL.displayError(e);
+                                       }
+
+                            }
+				WScript.StdOut.Write(_isMultiLinesMode?"      >":"Coffee>");
+					 		$=__$;
                             _singleLine = WScript.StdIn.ReadLine();
  
                             if(!_singleLine)_isMultiLinesMode=!_isMultiLinesMode;
-        
-        
-                            if (_isMultiLinesMode) {
-        	            _multiLines += _singleLine + "\n";
-                     }
-	
-                     else {
-                            _singleLine = _multiLines || _singleLine;
-                            _multiLines="";
-                            try {
-                                  __$=CoffeeScript.compile(_singleLine,{"bare":true});
-                                  _=eval(__$);
-                                  say(_);
-                            }      catch(e) {
-                                  REPL.displayError(e);
-                                   }
-                     }
 			}
 		},
 	

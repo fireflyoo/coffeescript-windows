@@ -1,0 +1,98 @@
+<job>
+<!-- https://github.com/jashkenas/coffee-script/raw/master/extras/coffee-script.js -->
+<script src="polyfill.js" language="JScript" />
+<script src="coffee-script.js" language="JScript" />
+<script src="REPL.js" language="JScript" />
+<script language="JScript">
+(function() {
+if(!WScript.Arguments.Length){
+		REPL.start();
+}
+else
+{
+    var args = [];
+    for (var i = 0; i < WScript.Arguments.Length; i++) {
+        args.push(WScript.Arguments.Item(i));
+    }
+
+    // FileSystemObject: http://msdn.microsoft.com/en-us/library/bkx696eh.aspx
+
+    var fso = new ActiveXObject("Scripting.FileSystemObject");
+
+    var isfolder = (args[0] && fso.folderExists(args[0]));
+
+    if (isfolder) {
+        f = fso.getFolder(args[0]);
+        e = new Enumerator(f.files);
+        for (; !e.atEnd(); e.moveNext()) {
+            if (e.item().path.toLowerCase().lastIndexOf('.coffee') != -1) {
+                convert(e.item(), args[1]);
+            }
+        }
+    }
+    else {
+        convert(args[0], args[1])
+    }
+}
+})();
+
+
+function convert(input, output) {
+
+    var fso = new ActiveXObject("Scripting.FileSystemObject");
+
+    if (output) {
+        // if output specifies a folder name, output filename is same as input filename with .coffee extension
+        if (fso.folderExists(output)) {
+            output = output + '\\' + fso.getFile(input).name.replace('\.coffee', '.js')
+        }
+    }
+
+    var coffee;
+/*
+    if (!input) { 
+        // Read all input data from STDIN
+        var chunks = [];
+        while (!WScript.StdIn.AtEndOfStream)
+            chunks.push(WScript.StdIn.ReadAll());
+        coffee = chunks.join('');
+    }
+    else {
+        coffee = readUtf8(input);
+    }
+*/
+        coffee = readUtf8(input);
+    try {
+        var js = CoffeeScript.compile(coffee);
+        
+        if (!output) {
+            WScript.StdOut.Write(js);
+        }
+        else {
+            writeUtf8(output, js);
+        }
+    }
+    catch (err) {
+        WScript.StdErr.WriteLine(err.message);
+        WScript.Quit(1);
+    }
+}
+
+function readUtf8(filename) {
+    var ForReading = 1;
+	var fso = new ActiveXObject("Scripting.FileSystemObject");
+    var f= fso.OpenTextFile(filename, ForReading, false);
+	var text = f.ReadAll();
+	f.Close();
+	return text;
+}
+
+function writeUtf8(filename, text) {
+    var ForWriting = 2;
+	var fso = new ActiveXObject("Scripting.FileSystemObject");
+    var f= fso.OpenTextFile(filename, ForWriting, true);
+	f.Write(text);
+	f.Close();
+}
+</script>
+</job>
